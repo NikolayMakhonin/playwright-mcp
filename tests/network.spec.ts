@@ -100,7 +100,6 @@ test('browser_network_requests with type filter', async ({ client, server }) => 
   server.setContent('/', `
     <script>
       fetch('/api');
-      fetch('data:text/plain,hello');
       fetch('https://example.com/external');
     </script>
   `, 'text/html');
@@ -127,16 +126,6 @@ test('browser_network_requests with type filter', async ({ client, server }) => 
   });
   expect(sameHostOnly).toHaveResponse({
     result: expect.not.stringContaining('example.com'),
-  });
-
-  const dataOnly = await client.callTool({
-    name: 'browser_network_requests',
-    arguments: {
-      include: [{ types: ['data'] }],
-    },
-  });
-  expect(dataOnly).toHaveResponse({
-    result: expect.stringContaining('data:text/plain,hello'),
   });
 
   const thirdPartyOnly = await client.callTool({

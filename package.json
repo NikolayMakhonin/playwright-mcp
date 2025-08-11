@@ -25,9 +25,9 @@
     "update-readme": "node utils/update-readme.js",
     "watch": "tsc --watch",
     "test": "playwright test",
-    "ctest": "playwright test --project=chrome",
-    "ftest": "playwright test --project=firefox",
-    "wtest": "playwright test --project=webkit",
+    "test:chrome": "playwright test --project=chrome",
+    "test:firefox": "playwright test --project=firefox",
+    "test:webkit": "playwright test --project=webkit",
     "clean": "shx rm -rf lib",
     "prepublishOnly": "pnpm lint-fix && pnpm clean && pnpm build && pnpm lint && test"
   },

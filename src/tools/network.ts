@@ -24,19 +24,15 @@ const MAX_TOTAL_TEXT_LENGTH = 2000;
 
 const NetworkFilterSchema = z.object({
   statuses: z.array(z.tuple([z.number(), z.number()])).optional().describe('Status code ranges to match [[200, 299], [400, 499]]. If omitted, all statuses are matched.'),
-  types: z.array(z.enum(['extension', 'data', 'sameHost', '3rd-party'])).optional().describe('Request types to match. If omitted, all types are matched.'),
+  types: z.array(z.enum(['extension', 'sameHost', '3rd-party'])).optional().describe('Request types to match. If omitted, all types are matched.'),
   pattern: z.string().optional().describe('Regex pattern for request URL with flags `iu` (case-insensitive, unicode). If omitted, all requests are matched.'),
 });
 
-function getNetworkRequestType(request: playwright.Request, currentPageUrl: string): 'extension' | 'data' | 'sameHost' | '3rd-party' {
+function getNetworkRequestType(request: playwright.Request, currentPageUrl: string): 'extension' | 'sameHost' | '3rd-party' {
   const url = request.url();
 
   if (url.startsWith('chrome-extension://') || url.startsWith('moz-extension://'))
     return 'extension';
-
-
-  if (url.startsWith('data:'))
-    return 'data';
 
 
   try {
@@ -120,7 +116,11 @@ const requests = defineTabTool({
       countLast: params.last,
     });
 
-    resultStrings.forEach(str => response.addResult(str));
+    if (resultStrings.length === 0) {
+      response.addResult('No network requests found matching the specified filters');
+    } else {
+      resultStrings.forEach(str => response.addResult(str));
+    }
   },
 });
 

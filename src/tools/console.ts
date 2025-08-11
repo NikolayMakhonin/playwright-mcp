@@ -96,7 +96,11 @@ const console = defineTabTool({
       countLast: params.last,
     });
 
-    resultStrings.forEach(str => response.addResult(str));
+    if (resultStrings.length === 0) {
+      response.addResult('[No console messages found matching the specified filters]');
+    } else {
+      resultStrings.forEach(str => response.addResult(str));
+    }
   },
 });
 
