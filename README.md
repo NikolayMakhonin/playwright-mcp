@@ -411,8 +411,12 @@ http.createServer(async (req, res) => {
 
 - **browser_console_messages**
   - Title: Get console messages
-  - Description: Returns all console messages
-  - Parameters: None
+  - Description: Returns console messages with optional filtering and limiting
+  - Parameters:
+    - `include` (array, optional): Include messages matching any of these filters.
+    - `exclude` (array, optional): Exclude messages matching any of these filters. Exclude has higher priority than include.
+    - `first` (number, optional): Return first N messages after filtering.
+    - `last` (number, optional): Return last N messages after filtering.
   - Read-only: **true**
 
 <!-- NOTE: This has been generated via update-readme.js -->
@@ -496,8 +500,12 @@ http.createServer(async (req, res) => {
 
 - **browser_network_requests**
   - Title: List network requests
-  - Description: Returns all network requests since loading the page
-  - Parameters: None
+  - Description: Returns network requests with optional filtering and limiting
+  - Parameters:
+    - `include` (array, optional): Include requests matching any of these filters.
+    - `exclude` (array, optional): Exclude requests matching any of these filters. Exclude has higher priority than include.
+    - `first` (number, optional): Return first N requests after filtering.
+    - `last` (number, optional): Return last N requests after filtering.
   - Read-only: **true**
 
 <!-- NOTE: This has been generated via update-readme.js -->

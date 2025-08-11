@@ -1,8 +1,11 @@
 {
-  "name": "@playwright/mcp",
-  "version": "0.0.33",
-  "description": "Playwright Tools for MCP",
+  "name": "@flemist/playwright-mcp",
+  "version": "0.0.34",
+  "description": "Playwright Tools for MCP with filtering",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/microsoft/playwright-mcp.git"
@@ -25,9 +28,8 @@
     "ctest": "playwright test --project=chrome",
     "ftest": "playwright test --project=firefox",
     "wtest": "playwright test --project=webkit",
-    "run-server": "node lib/browserServer.js",
-    "clean": "rm -rf lib",
-    "npm-publish": "npm run clean && npm run build && npm run test && npm publish"
+    "clean": "shx rm -rf lib",
+    "prepublishOnly": "pnpm lint-fix && pnpm clean && pnpm build && pnpm lint && test"
   },
   "exports": {
     "./package.json": "./package.json",
@@ -65,6 +67,7 @@
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-notice": "^1.0.0",
     "openai": "^5.10.2",
+    "shx": "0.3.4",
     "typescript": "^5.8.2"
   },
   "bin": {

@@ -83,3 +83,86 @@ export async function generateLocator(locator: playwright.Locator): Promise<stri
 export async function callOnPageNoTrace<T>(page: playwright.Page, callback: (page: playwright.Page) => Promise<T>): Promise<T> {
   return await (page as any)._wrapApiCall(() => callback(page), { internal: true });
 }
+
+export interface StringArrayApplyLimitsOptions {
+  maxTotalLength: number;
+  countFirst?: number | null;
+  countLast?: number | null;
+}
+
+function stringArrayTotalLength(strings: string[]): number {
+  return strings.reduce((length, str) => length + str.length, 0);
+}
+
+function stringArrayTrimToLength(strings: string[], maxLength: number, preferEnd: boolean): string[] {
+  let length = 0;
+  let index = 0;
+
+  if (preferEnd) {
+    for (let i = strings.length - 1; i >= 0; i--) {
+      length += strings[i].length;
+      if (length > maxLength)
+        break;
+      index = i;
+    }
+    return strings.slice(index);
+  } else {
+    for (let i = 0; i < strings.length; i++) {
+      length += strings[i].length;
+      if (length > maxLength)
+        break;
+      index = i + 1;
+    }
+    return strings.slice(0, index);
+  }
+}
+
+export function stringArrayApplyLimits(strings: string[], options: StringArrayApplyLimitsOptions): string[] {
+  const { maxTotalLength, countFirst, countLast } = options;
+  let result = strings;
+
+  if (countFirst && countLast) {
+    const firstN = strings.slice(0, countFirst);
+    const lastN = strings.slice(-countLast);
+    const lengthFirst = stringArrayTotalLength(firstN);
+    const lengthLast = stringArrayTotalLength(lastN);
+    const totalLength = lengthFirst + lengthLast;
+
+    if (totalLength > maxTotalLength) {
+      const maxLengthFirst = Math.floor(maxTotalLength * (lengthFirst / totalLength));
+      const maxLengthLast = maxTotalLength - maxLengthFirst;
+      const trimmedFirst = stringArrayTrimToLength(firstN, maxLengthFirst, false);
+      const trimmedLast = stringArrayTrimToLength(lastN, maxLengthLast, true);
+
+      const skippedFirst = firstN.length - trimmedFirst.length;
+      const skippedLast = lastN.length - trimmedLast.length;
+      const totalSkipped = strings.length - countFirst - countLast + skippedFirst + skippedLast;
+
+      result = [...trimmedFirst, `[${totalSkipped} messages skipped]`, ...trimmedLast];
+    } else {
+      result = [...firstN, ...lastN];
+    }
+  } else if (countFirst) {
+    result = strings.slice(0, countFirst);
+    const trimmed = stringArrayTrimToLength(result, maxTotalLength, false);
+    const skipped = result.length - trimmed.length;
+    result = trimmed;
+    if (skipped > 0)
+      result.push(`[${skipped} messages trimmed]`);
+  } else if (countLast) {
+    result = strings.slice(-countLast);
+    const trimmed = stringArrayTrimToLength(result, maxTotalLength, true);
+    const skipped = result.length - trimmed.length;
+    result = trimmed;
+    if (skipped > 0)
+      result.unshift(`[${skipped} messages trimmed]`);
+  } else {
+    const trimmed = stringArrayTrimToLength(strings, maxTotalLength, true);
+    const skipped = strings.length - trimmed.length;
+    result = trimmed;
+    if (skipped > 0)
+      result.unshift(`[${skipped} messages trimmed]`);
+  }
+
+  return result;
+}

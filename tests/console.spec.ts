@@ -98,3 +98,184 @@ test('recent console messages', async ({ client, server }) => {
     consoleMessages: expect.stringContaining(`- [LOG] Hello, world! @`),
   });
 });
+
+test('browser_console_messages with type filter', async ({ client, server }) => {
+  server.setContent('/', `
+    <!DOCTYPE html>
+    <html>
+      <script>
+        console.log("Log message");
+        console.warn("Warning message");
+        console.error("Error message");
+        console.info("Info message");
+      </script>
+    </html>
+  `, 'text/html');
+
+  await client.callTool({
+    name: 'browser_navigate',
+    arguments: {
+      url: server.PREFIX,
+    },
+  });
+
+  const errorOnly = await client.callTool({
+    name: 'browser_console_messages',
+    arguments: {
+      include: [{ types: ['error'] }],
+    },
+  });
+  expect(errorOnly).toHaveResponse({
+    result: expect.stringContaining('[ERROR] Error message'),
+  });
+  expect(errorOnly).toHaveResponse({
+    result: expect.not.stringContaining('[LOG] Log message'),
+  });
+
+  const warningAndError = await client.callTool({
+    name: 'browser_console_messages',
+    arguments: {
+      include: [{ types: ['warning', 'error'] }],
+    },
+  });
+  expect(warningAndError).toHaveResponse({
+    result: expect.stringContaining('[WARNING] Warning message'),
+  });
+  expect(warningAndError).toHaveResponse({
+    result: expect.stringContaining('[ERROR] Error message'),
+  });
+});
+
+test('browser_console_messages with pattern filter', async ({ client, server }) => {
+  server.setContent('/', `
+    <!DOCTYPE html>
+    <html>
+      <script>
+        console.log("Hello world");
+        console.log("Goodbye world");
+        console.error("API error occurred");
+      </script>
+    </html>
+  `, 'text/html');
+
+  await client.callTool({
+    name: 'browser_navigate',
+    arguments: {
+      url: server.PREFIX,
+    },
+  });
+
+  const worldMessages = await client.callTool({
+    name: 'browser_console_messages',
+    arguments: {
+      include: [{ pattern: 'world' }],
+    },
+  });
+  expect(worldMessages).toHaveResponse({
+    result: expect.stringContaining('[LOG] Hello world'),
+  });
+  expect(worldMessages).toHaveResponse({
+    result: expect.stringContaining('[LOG] Goodbye world'),
+  });
+  expect(worldMessages).toHaveResponse({
+    result: expect.not.stringContaining('API error'),
+  });
+
+  const errorPattern = await client.callTool({
+    name: 'browser_console_messages',
+    arguments: {
+      include: [{ pattern: 'error' }],
+    },
+  });
+  expect(errorPattern).toHaveResponse({
+    result: expect.stringContaining('[ERROR] API error occurred'),
+  });
+});
+
+test('browser_console_messages with exclude filter', async ({ client, server }) => {
+  server.setContent('/', `
+    <!DOCTYPE html>
+    <html>
+      <script>
+        console.log("Keep this log");
+        console.error("Remove this error");
+        console.warn("Keep this warning");
+      </script>
+    </html>
+  `, 'text/html');
+
+  await client.callTool({
+    name: 'browser_navigate',
+    arguments: {
+      url: server.PREFIX,
+    },
+  });
+
+  const excludeErrors = await client.callTool({
+    name: 'browser_console_messages',
+    arguments: {
+      exclude: [{ types: ['error'] }],
+    },
+  });
+  expect(excludeErrors).toHaveResponse({
+    result: expect.stringContaining('[LOG] Keep this log'),
+  });
+  expect(excludeErrors).toHaveResponse({
+    result: expect.stringContaining('[WARNING] Keep this warning'),
+  });
+  expect(excludeErrors).toHaveResponse({
+    result: expect.not.stringContaining('[ERROR] Remove this error'),
+  });
+});
+
+test('browser_console_messages with first/last limits', async ({ client, server }) => {
+  server.setContent('/', `
+    <!DOCTYPE html>
+    <html>
+      <script>
+        for (let i = 1; i <= 5; i++) {
+          console.log("Message " + i);
+        }
+      </script>
+    </html>
+  `, 'text/html');
+
+  await client.callTool({
+    name: 'browser_navigate',
+    arguments: {
+      url: server.PREFIX,
+    },
+  });
+
+  const firstTwo = await client.callTool({
+    name: 'browser_console_messages',
+    arguments: {
+      first: 2,
+    },
+  });
+  expect(firstTwo).toHaveResponse({
+    result: expect.stringContaining('[LOG] Message 1'),
+  });
+  expect(firstTwo).toHaveResponse({
+    result: expect.stringContaining('[LOG] Message 2'),
+  });
+  expect(firstTwo).toHaveResponse({
+    result: expect.not.stringContaining('[LOG] Message 3'),
+  });
+
+  const lastTwo = await client.callTool({
+    name: 'browser_console_messages',
+    arguments: {
+      last: 2,
+    },
+  });
+  expect(lastTwo).toHaveResponse({
+    result: expect.stringContaining('[LOG] Message 4'),
+  });
+  expect(lastTwo).toHaveResponse({
+    result: expect.stringContaining('[LOG] Message 5'),
+  });
+  expect(lastTwo).toHaveResponse({
+    result: expect.not.stringContaining('[LOG] Message 1'),
+  });
+});
