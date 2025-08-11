@@ -29,7 +29,7 @@
     "test:firefox": "playwright test --project=firefox",
     "test:webkit": "playwright test --project=webkit",
     "clean": "shx rm -rf lib",
-    "prepublishOnly": "pnpm lint-fix && pnpm clean && pnpm build && pnpm lint && test"
+    "prepublishOnly": "pnpm lint-fix && pnpm clean && pnpm build && pnpm lint && pnpm test"
   },
   "exports": {
     "./package.json": "./package.json",
