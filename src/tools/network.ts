@@ -116,11 +116,11 @@ const requests = defineTabTool({
       countLast: params.last,
     });
 
-    if (resultStrings.length === 0) {
+    if (resultStrings.length === 0)
       response.addResult('No network requests found matching the specified filters');
-    } else {
+    else
       resultStrings.forEach(str => response.addResult(str));
-    }
+
   },
 });
 

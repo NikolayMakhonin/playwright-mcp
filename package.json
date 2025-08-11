@@ -1,6 +1,6 @@
 {
   "name": "@flemist/playwright-mcp",
-  "version": "0.0.34",
+  "version": "0.0.1",
   "description": "Playwright Tools for MCP with filtering",
   "type": "module",
   "publishConfig": {
